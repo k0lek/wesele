@@ -3,6 +3,7 @@ const TAG = 'fotografia_misja';
 const API_URL = `https://res.cloudinary.com/${CLOUD_NAME}/image/list/${TAG}.json`;
 
 let images = [];
+let currentModalIdx = 0;
 
 async function fetchImages() {
   try {
@@ -12,14 +13,14 @@ async function fetchImages() {
     images = data.resources.sort((a, b) => b.created_at.localeCompare(a.created_at));
     renderGallery();
   } catch (e) {
-    document.getElementById('gallery').innerHTML = '<p class="col-span-4 text-center">Brak zdjęć lub błąd połączenia.</p>';
+    document.getElementById('gallery').innerHTML = '<p class="col-span-4 text-center text-white">Brak zdjęć lub błąd połączenia.</p>';
   }
 }
 
 function renderGallery() {
   const gallery = document.getElementById('gallery');
   if (images.length === 0) {
-    gallery.innerHTML = '<p class="col-span-4 text-center">Brak zdjęć.</p>';
+    gallery.innerHTML = '<p class="col-span-4 text-center text-white">Brak zdjęć.</p>';
     return;
   }
   gallery.innerHTML = images.map((img, idx) => {
@@ -30,13 +31,19 @@ function renderGallery() {
     return `
       <div class="cursor-pointer group" onclick="showModal(${idx})">
         <img src="${url}" alt="${caption}" class="rounded shadow w-full aspect-video object-cover group-hover:opacity-80 transition">
-        <div class="mt-2 text-xs text-center text-gray-700">${caption}${author ? ' – ' + author : ''}</div>
+        <div class="mt-2 text-xs text-center text-white font-semibold">${caption}${author ? ' – ' + author : ''}</div>
       </div>
     `;
   }).join('');
 }
 
 window.showModal = function(idx) {
+  currentModalIdx = idx;
+  showModalImage(idx);
+  document.getElementById('modal').classList.remove('hidden');
+}
+
+function showModalImage(idx) {
   const img = images[idx];
   const url = `https://res.cloudinary.com/dvg3dotyn/image/upload/${img.public_id}.${img.format}`;
   const context = img.context && img.context.custom ? img.context.custom : {};
@@ -45,7 +52,6 @@ window.showModal = function(idx) {
   document.getElementById('modalImg').src = url;
   document.getElementById('modalImg').alt = caption;
   document.getElementById('modalCaption').textContent = `${caption}${author ? ' – ' + author : ''}`;
-  document.getElementById('modal').classList.remove('hidden');
 }
 
 document.getElementById('closeModal').onclick = function() {
@@ -59,6 +65,45 @@ document.getElementById('modal').onclick = function(e) {
     document.getElementById('modalImg').src = '';
   }
 };
+
+// Lightbox: nawigacja strzałkami
+function prevModal() {
+  if (images.length === 0) return;
+  currentModalIdx = (currentModalIdx - 1 + images.length) % images.length;
+  showModalImage(currentModalIdx);
+}
+function nextModal() {
+  if (images.length === 0) return;
+  currentModalIdx = (currentModalIdx + 1) % images.length;
+  showModalImage(currentModalIdx);
+}
+
+// Dodaj przyciski do modala
+const modal = document.getElementById('modal');
+const leftBtn = document.createElement('button');
+leftBtn.innerHTML = '&#8592;';
+leftBtn.className = 'absolute left-2 top-1/2 -translate-y-1/2 text-3xl text-gray-700 hover:text-white px-2 py-1 bg-black bg-opacity-30 rounded-full z-10';
+leftBtn.onclick = function(e) { e.stopPropagation(); prevModal(); };
+const rightBtn = document.createElement('button');
+rightBtn.innerHTML = '&#8594;';
+rightBtn.className = 'absolute right-2 top-1/2 -translate-y-1/2 text-3xl text-gray-700 hover:text-white px-2 py-1 bg-black bg-opacity-30 rounded-full z-10';
+rightBtn.onclick = function(e) { e.stopPropagation(); nextModal(); };
+window.addEventListener('DOMContentLoaded', () => {
+  const modalImgParent = document.getElementById('modalImg').parentNode;
+  modalImgParent.appendChild(leftBtn);
+  modalImgParent.appendChild(rightBtn);
+});
+
+// Obsługa klawiatury
+window.addEventListener('keydown', function(e) {
+  if (document.getElementById('modal').classList.contains('hidden')) return;
+  if (e.key === 'ArrowLeft') prevModal();
+  if (e.key === 'ArrowRight') nextModal();
+  if (e.key === 'Escape') {
+    document.getElementById('modal').classList.add('hidden');
+    document.getElementById('modalImg').src = '';
+  }
+});
 
 // Odświeżanie galerii co 10 sekund
 env = typeof window !== 'undefined' ? window : global;

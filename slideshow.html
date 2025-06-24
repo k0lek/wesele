@@ -6,12 +6,12 @@
   <title>Slajdy – Fotografia Misja</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 min-h-screen flex items-center justify-center">
-  <div class="w-full max-w-md bg-white rounded-xl shadow-lg p-8">
-    <h1 class="text-2xl font-bold text-center mb-6">Slajdy – Fotografia Misja</h1>
-    <div id="slideshow" class="flex flex-col items-center">
-      <div id="slide" class="w-full flex justify-center"></div>
-      <div id="caption" class="mt-4 text-lg text-gray-700 text-center"></div>
+<body class="bg-black min-h-screen w-screen flex flex-col items-center justify-center overflow-hidden">
+  <div class="fixed inset-0 flex flex-col items-center justify-center">
+    <h1 class="text-3xl font-bold text-white opacity-50 mb-4 select-none">Slajdy – Fotografia Misja</h1>
+    <div id="slideshow" class="flex flex-col items-center w-full h-full justify-center">
+      <div id="slide" class="flex items-center justify-center w-screen h-[70vh] md:h-[80vh]"></div>
+      <div id="caption" class="mt-6 text-2xl text-white opacity-50 text-center select-none"></div>
     </div>
   </div>
   <script src="slideshow.js"></script>
