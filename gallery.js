@@ -119,6 +119,18 @@ window.addEventListener('DOMContentLoaded', () => {
   const modalImgParent = document.getElementById('modalImg').parentNode;
   modalImgParent.appendChild(leftBtn);
   modalImgParent.appendChild(rightBtn);
+
+  // Obsługa przycisku resetu slideshow
+  const resetBtn = document.getElementById('resetSlideshowBtn');
+  if (resetBtn) {
+    resetBtn.onclick = function(e) {
+      e.stopPropagation();
+      localStorage.removeItem('hiddenInSlideshow');
+      renderGallery();
+      alert('Wszystkie zdjęcia będą znowu widoczne w slideshow!');
+      location.reload();
+    };
+  }
 });
 
 // Obsługa klawiatury
