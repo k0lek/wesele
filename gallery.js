@@ -18,8 +18,10 @@ async function fetchImages() {
     if (!res.ok) throw new Error('Brak zdjęć lub błąd API');
     const data = await res.json();
     images = data.resources.sort((a, b) => b.created_at.localeCompare(a.created_at));
+    console.log('Liczba zdjęć w galerii:', images.length, images.map(img => img.public_id));
     renderGallery();
   } catch (e) {
+    console.warn('Błąd pobierania zdjęć lub brak zdjęć:', e);
     document.getElementById('gallery').innerHTML = '<p class="col-span-4 text-center text-white">Brak zdjęć lub błąd połączenia.</p>';
   }
 }
@@ -67,6 +69,7 @@ function showModalImage(idx) {
   document.getElementById('modalImg').src = url;
   document.getElementById('modalImg').alt = caption;
   document.getElementById('modalCaption').textContent = `${caption}${author ? ' – ' + author : ''}`;
+  console.log('Pokazuję zdjęcie:', img);
 }
 
 window.toggleSlideshow = function(e, public_id) {
@@ -145,20 +148,7 @@ window.addEventListener('keydown', function(e) {
 });
 
 // Odświeżanie galerii co 10 sekund
-env = typeof window !== 'undefined' ? window : global;
-if (env) setInterval(fetchImages, 10000);
+setInterval(fetchImages, 10000);
 
-fetchImages();
-
-document.getElementById('fullscreenBtn').onclick = function() {
-  const elem = document.documentElement;
-  if (elem.requestFullscreen) {
-    elem.requestFullscreen();
-  } else if (elem.mozRequestFullScreen) { // Firefox
-    elem.mozRequestFullScreen();
-  } else if (elem.webkitRequestFullscreen) { // Chrome, Safari, Opera
-    elem.webkitRequestFullscreen();
-  } else if (elem.msRequestFullscreen) { // IE/Edge
-    elem.msRequestFullscreen();
-  }
-}; 
+// Inicjalizacja
+fetchImages(); 
