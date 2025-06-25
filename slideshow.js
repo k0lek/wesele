@@ -5,12 +5,19 @@ const API_URL = `https://res.cloudinary.com/${CLOUD_NAME}/image/list/${TAG}.json
 let images = [];
 let current = 0;
 
+function getHiddenList() {
+  return JSON.parse(localStorage.getItem('hiddenInSlideshow') || '[]');
+}
+
 async function fetchImages() {
   try {
     const res = await fetch(API_URL);
     if (!res.ok) throw new Error('Brak zdjęć lub błąd API');
     const data = await res.json();
-    images = data.resources.sort((a, b) => b.created_at.localeCompare(a.created_at));
+    const hidden = getHiddenList();
+    images = data.resources
+      .filter(img => !hidden.includes(img.public_id))
+      .sort((a, b) => b.created_at.localeCompare(a.created_at));
     if (images.length === 0) {
       document.getElementById('slide').innerHTML = '<p class="text-white opacity-50">Brak zdjęć.</p>';
       document.getElementById('caption').textContent = '';
@@ -47,4 +54,23 @@ setInterval(nextSlide, 5000); // co 5 sekund
 setInterval(fetchImages, 10000); // co 10 sekund
 
 // Inicjalizacja
-fetchImages(); 
+fetchImages();
+
+// Obsługa pełnego ekranu
+window.addEventListener('DOMContentLoaded', () => {
+  const btn = document.getElementById('fullscreenBtn');
+  if (btn) {
+    btn.onclick = function() {
+      const elem = document.documentElement;
+      if (elem.requestFullscreen) {
+        elem.requestFullscreen();
+      } else if (elem.mozRequestFullScreen) { // Firefox
+        elem.mozRequestFullScreen();
+      } else if (elem.webkitRequestFullscreen) { // Chrome, Safari, Opera
+        elem.webkitRequestFullscreen();
+      } else if (elem.msRequestFullscreen) { // IE/Edge
+        elem.msRequestFullscreen();
+      }
+    };
+  }
+}); 

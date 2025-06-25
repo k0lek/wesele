@@ -5,6 +5,13 @@ const API_URL = `https://res.cloudinary.com/${CLOUD_NAME}/image/list/${TAG}.json
 let images = [];
 let currentModalIdx = 0;
 
+function getHiddenList() {
+  return JSON.parse(localStorage.getItem('hiddenInSlideshow') || '[]');
+}
+function setHiddenList(list) {
+  localStorage.setItem('hiddenInSlideshow', JSON.stringify(list));
+}
+
 async function fetchImages() {
   try {
     const res = await fetch(API_URL);
@@ -23,15 +30,23 @@ function renderGallery() {
     gallery.innerHTML = '<p class="col-span-4 text-center text-white">Brak zdjęć.</p>';
     return;
   }
+  const hidden = getHiddenList();
   gallery.innerHTML = images.map((img, idx) => {
     const url = `https://res.cloudinary.com/dvg3dotyn/image/upload/${img.public_id}.${img.format}`;
     const context = img.context && img.context.custom ? img.context.custom : {};
     const caption = context.caption || '';
     const author = context.author || '';
+    const isHidden = hidden.includes(img.public_id);
+    const btnClass = isHidden
+      ? 'absolute top-2 right-2 bg-red-600 bg-opacity-70 text-white text-xs px-2 py-1 rounded hover:bg-red-800 z-10'
+      : 'absolute top-2 right-2 bg-black bg-opacity-60 text-white text-xs px-2 py-1 rounded hover:bg-opacity-90 z-10';
     return `
-      <div class="cursor-pointer group" onclick="showModal(${idx})">
+      <div class="cursor-pointer group relative" onclick="showModal(${idx})">
         <img src="${url}" alt="${caption}" class="rounded shadow w-full aspect-video object-cover group-hover:opacity-80 transition">
         <div class="mt-2 text-xs text-center text-white font-semibold">${caption}${author ? ' – ' + author : ''}</div>
+        <button onclick="toggleSlideshow(event, '${img.public_id}')" class="${btnClass}">
+          ${isHidden ? 'Pokaż w slideshow' : 'Ukryj w slideshow'}
+        </button>
       </div>
     `;
   }).join('');
@@ -52,6 +67,18 @@ function showModalImage(idx) {
   document.getElementById('modalImg').src = url;
   document.getElementById('modalImg').alt = caption;
   document.getElementById('modalCaption').textContent = `${caption}${author ? ' – ' + author : ''}`;
+}
+
+window.toggleSlideshow = function(e, public_id) {
+  e.stopPropagation();
+  let hidden = getHiddenList();
+  if (hidden.includes(public_id)) {
+    hidden = hidden.filter(id => id !== public_id);
+  } else {
+    hidden.push(public_id);
+  }
+  setHiddenList(hidden);
+  renderGallery();
 }
 
 document.getElementById('closeModal').onclick = function() {
@@ -109,4 +136,17 @@ window.addEventListener('keydown', function(e) {
 env = typeof window !== 'undefined' ? window : global;
 if (env) setInterval(fetchImages, 10000);
 
-fetchImages(); 
+fetchImages();
+
+document.getElementById('fullscreenBtn').onclick = function() {
+  const elem = document.documentElement;
+  if (elem.requestFullscreen) {
+    elem.requestFullscreen();
+  } else if (elem.mozRequestFullScreen) { // Firefox
+    elem.mozRequestFullScreen();
+  } else if (elem.webkitRequestFullscreen) { // Chrome, Safari, Opera
+    elem.webkitRequestFullscreen();
+  } else if (elem.msRequestFullscreen) { // IE/Edge
+    elem.msRequestFullscreen();
+  }
+}; 
