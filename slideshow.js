@@ -137,12 +137,13 @@ window.addEventListener('DOMContentLoaded', () => {
         slideEl.className = 'flex items-center justify-center fixed inset-0';
       }
       if (img) {
-        img.classList.remove('object-contain', 'w-auto', 'h-auto', 'max-w-full', 'max-h-full');
-        img.classList.add('object-cover');
+        img.classList.remove('object-cover');
+        img.classList.add('object-contain');
         img.style.width = '100vw';
         img.style.height = '100vh';
-        img.style.maxWidth = 'none';
-        img.style.maxHeight = 'none';
+        img.style.objectFit = 'contain';
+        img.style.maxWidth = '100vw';
+        img.style.maxHeight = '100vh';
         img.style.background = 'transparent';
       }
     } else {
@@ -157,6 +158,7 @@ window.addEventListener('DOMContentLoaded', () => {
         img.classList.add('object-contain');
         img.style.width = '100vw';
         img.style.height = '100vh';
+        img.style.objectFit = 'contain';
         img.style.maxWidth = '100vw';
         img.style.maxHeight = '100vh';
         img.style.background = 'black'; // lub transparent
