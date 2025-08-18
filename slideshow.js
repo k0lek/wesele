@@ -154,11 +154,12 @@ window.addEventListener('DOMContentLoaded', () => {
       }
       if (img) {
         img.classList.remove('object-cover');
-        img.classList.add('object-contain', 'max-h-full', 'max-w-full', 'w-auto', 'h-auto');
-        img.style.width = '';
-        img.style.height = '';
-        img.style.maxWidth = '';
-        img.style.maxHeight = '';
+        img.classList.add('object-contain');
+        img.style.width = '100vw';
+        img.style.height = '100vh';
+        img.style.maxWidth = '100vw';
+        img.style.maxHeight = '100vh';
+        img.style.background = 'black'; // lub transparent
       }
     }
   }
