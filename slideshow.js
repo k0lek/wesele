@@ -38,6 +38,31 @@ async function fetchImages() {
   }
 }
 
+function preloadImage(url) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve();
+    img.onerror = reject;
+    img.src = url;
+  });
+}
+
+function fade(element, from, to, duration, onDone) {
+  const start = performance.now();
+  function step(now) {
+    const elapsed = now - start;
+    const progress = Math.min(elapsed / duration, 1);
+    const value = from + (to - from) * progress;
+    element.style.opacity = String(value);
+    if (progress < 1) {
+      requestAnimationFrame(step);
+    } else if (onDone) {
+      onDone();
+    }
+  }
+  requestAnimationFrame(step);
+}
+
 function showSlide(idx) {
   if (images.length === 0) return;
   current = idx % images.length;
@@ -47,13 +72,38 @@ function showSlide(idx) {
   const caption = context.caption || '';
   const author = context.author || '';
   const slideDiv = document.getElementById('slide');
-  slideDiv.innerHTML = `<img id="slideImg" src="${url}" alt="${caption}" class="max-h-full max-w-full object-contain w-auto h-auto" style="background:transparent;">`;
-  document.getElementById('caption').textContent = `${caption}${author ? ' – ' + author : ''}`;
+
+  let slideImg = document.getElementById('slideImg');
+  const firstRender = !slideImg;
+
+  if (firstRender) {
+    // Pierwsze renderowanie – wstaw obraz bez animacji
+    slideDiv.innerHTML = `<img id="slideImg" src="${url}" alt="${caption}" class="max-h-full max-w-full object-contain w-auto h-auto" style="background:transparent; opacity:1;">`;
+    document.getElementById('caption').textContent = `${caption}${author ? ' – ' + author : ''}`;
+    slideImg = document.getElementById('slideImg');
+    slideImg.onerror = function() {
+      console.warn('Nie można załadować zdjęcia:', url);
+      nextSlide();
+    };
+    return;
+  }
+
+  // Preload nowego obrazu, potem płynny fade-out -> podmiana src -> fade-in
+  preloadImage(url)
+    .then(() => {
+      fade(slideImg, 1, 0, 600, () => {
+        slideImg.src = url;
+        slideImg.alt = caption;
+        document.getElementById('caption').textContent = `${caption}${author ? ' – ' + author : ''}`;
+        fade(slideImg, 0, 1, 600);
+      });
+    })
+    .catch(() => {
+      console.warn('Nie można załadować zdjęcia:', url);
+      nextSlide();
+    });
+
   console.log('Pokazuję slajd', current, '/', images.length, 'public_id:', img.public_id);
-  document.getElementById('slideImg').onerror = function() {
-    console.warn('Nie można załadować zdjęcia:', url);
-    nextSlide();
-  };
 }
 
 function nextSlide() {
@@ -62,7 +112,7 @@ function nextSlide() {
 }
 
 // Automatyczne przewijanie slajdów
-setInterval(nextSlide, 5000); // co 5 sekund
+setInterval(nextSlide, 10000); // co 10 sekund
 // Automatyczne odświeżanie zdjęć
 setInterval(fetchImages, 10000); // co 10 sekund
 
